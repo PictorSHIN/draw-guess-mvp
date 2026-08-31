@@ -15,6 +15,10 @@ function setPortrait() {
   }
 }
 
+function setKeepScreenOn(on) {
+  wx.setKeepScreenOn({ keepScreenOn: on });
+}
+
 Page({
   data: {
     phase: 'tap',
@@ -74,6 +78,7 @@ Page({
     gyro.unbindGame();
     gyro.stopSensor();
     this.clearTimers();
+    setKeepScreenOn(false);
     setPortrait();
   },
 
@@ -106,6 +111,8 @@ Page({
     this.idx = 0;
     this.results = [];
     this.locked = false;
+
+    setKeepScreenOn(true);
 
     gyro.bindGame({
       onAnswer: (correct) => this.answer(correct),
@@ -151,18 +158,27 @@ Page({
     }, 1000);
   },
 
-  renderWord() {
+  renderWord(animate) {
+    if (animate === undefined) animate = true;
     if (this.idx >= this.deck.length) {
       this.endGame();
       return;
     }
-    this.setData({
-      word: this.deck[this.idx],
-      wordHint: `第 ${this.idx + 1} / ${this.deck.length} 题`,
-      wordPop: false
-    });
-    setTimeout(() => this.setData({ wordPop: true }), 30);
-    sfx.wordFlip();
+    if (animate) {
+      this.setData({
+        word: this.deck[this.idx],
+        wordHint: `第 ${this.idx + 1} / ${this.deck.length} 题`,
+        wordPop: false
+      });
+      setTimeout(() => this.setData({ wordPop: true }), 30);
+      sfx.wordFlip();
+    } else {
+      this.setData({
+        word: this.deck[this.idx],
+        wordHint: `第 ${this.idx + 1} / ${this.deck.length} 题`,
+        wordPop: false
+      });
+    }
   },
 
   answer(correct) {
@@ -179,10 +195,20 @@ Page({
     gyro.vibrate(correct ? 'correct' : 'skip');
     this.updateScore();
 
+    if (!correct) {
+      this.idx += 1;
+      this.renderWord(false);
+      setTimeout(() => {
+        this.setData({ flashShow: false });
+        this.locked = false;
+      }, 950);
+      return;
+    }
+
     setTimeout(() => {
       this.setData({ flashShow: false });
       this.idx += 1;
-      this.renderWord();
+      this.renderWord(true);
       this.locked = false;
     }, 950);
   },
@@ -203,6 +229,7 @@ Page({
   endGame() {
     this.clearTimers();
     gyro.unbindGame();
+    setKeepScreenOn(false);
     sfx.end();
     session.setGame({
       results: this.results,
