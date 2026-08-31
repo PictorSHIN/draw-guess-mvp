@@ -1,0 +1,7 @@
+{
+  "desc": "你演我猜",
+  "rules": [{
+    "action": "allow",
+    "page": "*"
+  }]
+}

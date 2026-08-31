@@ -1,0 +1,34 @@
+.legal-page {
+  height: 100vh;
+  padding: 40rpx 40rpx env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 44rpx;
+  font-weight: 800;
+  margin-bottom: 12rpx;
+}
+
+.updated {
+  color: var(--muted);
+  font-size: 24rpx;
+  margin-bottom: 40rpx;
+}
+
+.section {
+  margin-bottom: 36rpx;
+}
+
+.h {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+  color: var(--neon-cyan);
+}
+
+.p {
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--muted);
+}

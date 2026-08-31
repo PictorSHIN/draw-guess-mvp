@@ -1,0 +1,76 @@
+page {
+  --bg: #0a0a12;
+  --bg2: #12122a;
+  --neon-pink: #ff2d95;
+  --neon-cyan: #05d9e8;
+  --neon-purple: #a742ff;
+  --neon-green: #39ff88;
+  --neon-yellow: #ffe600;
+  --text: #eaeaff;
+  --muted: #8a8ab0;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-brd: rgba(255, 255, 255, 0.12);
+
+  height: 100%;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 10%, #1a1040 0%, var(--bg) 55%),
+    radial-gradient(circle at 80% 90%, #061a2a 0%, transparent 60%);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  box-sizing: border-box;
+}
+
+.neon-title {
+  font-size: 68rpx;
+  font-weight: 900;
+  letter-spacing: 12rpx;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 12rpx var(--neon-pink), 0 0 32rpx var(--neon-pink), 0 0 64rpx var(--neon-purple);
+}
+
+.section-label {
+  color: var(--muted);
+  font-size: 24rpx;
+  margin: 40rpx 8rpx 20rpx;
+  letter-spacing: 4rpx;
+}
+
+.btn-primary {
+  margin: 32rpx 0 44rpx;
+  padding: 36rpx;
+  border-radius: 32rpx;
+  font-size: 40rpx;
+  font-weight: 800;
+  letter-spacing: 4rpx;
+  color: #001;
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple));
+  box-shadow: 0 0 44rpx rgba(255, 45, 149, 0.55);
+}
+
+.btn-primary[disabled] {
+  opacity: 0.35;
+  box-shadow: none;
+}
+
+.btn-ghost {
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: var(--card);
+  border: 1px solid var(--card-brd);
+  color: var(--text);
+  font-size: 32rpx;
+  text-align: center;
+}
+
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 32rpx;
+  margin: 24rpx 0 40rpx;
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.legal-links text {
+  text-decoration: underline;
+}

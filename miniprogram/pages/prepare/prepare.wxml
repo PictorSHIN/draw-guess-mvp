@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="center">
+    <view class="topic-name">{{topicName}}</view>
+    <view class="ready-tip">
+      <text>举到额头，屏幕朝队友</text>
+      <text class="line2"><text class="green">下翻答对</text> · <text class="pink">上翻跳过</text></text>
+    </view>
+  </view>
+  <button class="btn-primary" bindtap="onReady">准 备 好 了</button>
+  <view class="btn-ghost" bindtap="onBack">返回</view>
+</view>

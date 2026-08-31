@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="neon-title small">本轮结束</view>
+  <view class="result-score">{{score}}</view>
+  <view class="result-sub">{{sub}}</view>
+
+  <scroll-view class="review-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{empty}}" class="empty">这轮还没来得及答题～</view>
+    <view
+      wx:for="{{reviews}}"
+      wx:key="word"
+      class="review-item {{item.correct ? 'review-correct' : 'review-skip'}}"
+    >
+      <text class="review-mark">{{item.mark}}</text>
+      <text class="review-word">{{item.word}}</text>
+    </view>
+  </scroll-view>
+
+  <button class="btn-primary" bindtap="onAgain">再 来 一 局</button>
+  <view class="btn-ghost" bindtap="onHome">回首页</view>
+</view>

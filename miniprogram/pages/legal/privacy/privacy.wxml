@@ -1,0 +1,29 @@
+<scroll-view class="legal-page" scroll-y>
+  <view class="title">隐私政策</view>
+  <view class="updated">更新日期：2026-08-31</view>
+
+  <view class="section">
+    <view class="h">1. 概述</view>
+    <view class="p">「你演我猜」是一款线下聚会猜词辅助工具。我们重视您的隐私，本政策说明我们如何处理信息。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">2. 信息收集</view>
+    <view class="p">MVP 版本不收集、不上传、不存储任何可识别个人身份的信息。游戏数据（得分、答题记录）仅保存在您的设备内存中，关闭小程序后即清除。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">3. 设备权限</view>
+    <view class="p">为实现体感翻牌功能，我们可能请求访问设备加速度传感器。该数据仅在本地用于判断手机翻转方向，不会上传至任何服务器。您可随时通过屏幕按钮替代体感操作。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">4. 本地存储</view>
+    <view class="p">我们可能使用微信本地存储保存您的主题、难度、倒计时偏好及隐私协议同意状态，数据仅保存在您的设备上。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">5. 联系我们</view>
+    <view class="p">如有隐私相关问题，请通过小程序反馈渠道与我们联系。</view>
+  </view>
+</scroll-view>

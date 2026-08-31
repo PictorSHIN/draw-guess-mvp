@@ -16,5 +16,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Dependencies (if added later)
-node_modules/
+# WeChat DevTools
+project.private.config.json
+miniprogram/node_modules/

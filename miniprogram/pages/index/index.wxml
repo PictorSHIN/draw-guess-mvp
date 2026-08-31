@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="home-left">
+    <view class="neon-title">你演我猜</view>
+    <view class="home-tagline">举额头 · 猜猜看</view>
+  </view>
+
+  <scroll-view class="home-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="section-label">选择主题</view>
+    <view class="grid">
+      <view
+        wx:for="{{topics}}"
+        wx:key="id"
+        class="topic-card {{topic === item.id ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onTopicTap"
+      >
+        <view class="topic-name">{{item.name}}</view>
+        <view class="topic-count">{{item.total}} 题</view>
+      </view>
+    </view>
+
+    <view class="section-label">难度</view>
+    <view class="chip-row">
+      <view
+        wx:for="{{diffs}}"
+        wx:key="id"
+        class="chip diff {{diff === item.id ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onDiffTap"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="section-label">倒计时</view>
+    <view class="chip-row">
+      <view
+        wx:for="{{timePresets}}"
+        wx:key="*this"
+        class="chip time {{time === item ? 'selected' : ''}}"
+        data-time="{{item}}"
+        bindtap="onTimeTap"
+      >{{item}}s</view>
+    </view>
+    <view class="slider-wrap">
+      <view>自定义：<text class="slider-val">{{time}} 秒</text></view>
+      <slider min="30" max="180" step="5" value="{{time}}" activeColor="#ffe600" bindchanging="onSliderChange" />
+    </view>
+
+    <view class="legal-links">
+      <text bindtap="goPrivacy">隐私政策</text>
+      <text bindtap="goTerms">用户协议</text>
+    </view>
+  </scroll-view>
+
+  <button class="btn-primary" disabled="{{!topic}}" bindtap="onStart">开 始 游 戏</button>
+</view>
+
+<view class="privacy-mask" wx:if="{{showPrivacy}}">
+  <view class="privacy-box">
+    <view class="privacy-title">隐私政策提示</view>
+    <view class="privacy-text">本工具为线下聚会辅助，仅在本地使用加速度传感器实现翻牌操作，不上传个人数据。请阅读并同意<text class="link" bindtap="goPrivacy">《隐私政策》</text>与<text class="link" bindtap="goTerms">《用户协议》</text>后使用。</view>
+    <view class="privacy-btns">
+      <button class="btn-ghost" bindtap="rejectPrivacy">不同意</button>
+      <button class="btn-primary sm" bindtap="acceptPrivacy">同意并继续</button>
+    </view>
+  </view>
+</view>

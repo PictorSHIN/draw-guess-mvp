@@ -145,17 +145,30 @@
 ## 项目结构
 ```
 你画我猜MVP版/
-├── index.html              # 主程序（UI + 全部游戏逻辑）
-├── data/
-│   └── words.js            # 题库数据（window.WORD_BANK，11 主题 × 200 词）
-├── server.js               # 本地 HTTPS 测试服务（端口 8443）
-├── cert.pem / key.pem      # 自签名证书（仅本地测试，勿提交/勿用于生产）
-├── manifest.webmanifest    # PWA 清单（全屏、横屏、图标）
-├── icon.svg                # PWA 图标
-└── PRD.md                  # 产品需求文档
+├── miniprogram/            # 微信小程序（主交付形态）
+│   ├── app.js / app.json / app.wxss
+│   ├── data/words.js       # 题库（module.exports，11 主题 × 200 词）
+│   ├── utils/              # words / gyro / sfx / session
+│   └── pages/              # index · prepare · game · result · legal
+├── project.config.json     # 微信开发者工具项目配置
+├── index.html              # H5 原型（保留参考）
+├── data/words.js           # H5 题库源（与 miniprogram/data 同步）
+├── server.js               # H5 本地 HTTPS 测试服务
+├── manifest.webmanifest    # H5 PWA 清单
+├── icon.svg
+└── PRD.md
 ```
 
-## 本地运行
+## 微信小程序开发
+
+1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. 导入本项目根目录（`project.config.json` 已指向 `miniprogram/`）
+3. 在 `project.config.json` 中填入你的 **AppID**（测试可用测试号）
+4. 编译 → 真机预览 → 横屏举额头测试体感翻牌
+
+**服务类目**：工具 > 效率（提审按「聚会辅助工具」描述）
+
+## H5 本地运行（原型）
 ```bash
 node server.js
 # 手机与电脑同一 WiFi，浏览器访问 https://<电脑局域网IP>:8443

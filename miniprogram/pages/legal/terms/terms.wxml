@@ -1,0 +1,24 @@
+<scroll-view class="legal-page" scroll-y>
+  <view class="title">用户协议</view>
+  <view class="updated">更新日期：2026-08-31</view>
+
+  <view class="section">
+    <view class="h">1. 服务说明</view>
+    <view class="p">「你演我猜」为线下聚会场景提供的猜词互动辅助工具，仅供娱乐使用，不构成任何竞技或 gambling 服务。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">2. 使用规范</view>
+    <view class="p">请在安全、合适的场合使用本工具。使用体感功能时注意周围环境，避免在行走或驾驶时使用。题库内容仅供娱乐，请勿用于商业用途或二次传播。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">3. 免责声明</view>
+    <view class="p">本工具按「现状」提供，不对因使用本工具产生的任何直接或间接损失承担责任。体感判定因设备差异可能存在偏差，请以实际体验为准。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">4. 协议变更</view>
+    <view class="p">我们可能适时更新本协议，更新后的协议将在小程序内公布。继续使用即视为接受更新后的协议。</view>
+  </view>
+</scroll-view>

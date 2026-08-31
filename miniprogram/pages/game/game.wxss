@@ -1,0 +1,240 @@
+.page {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.countdown {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.count-num {
+  font-size: 360rpx;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 40rpx var(--neon-cyan), 0 0 100rpx var(--neon-cyan);
+}
+
+.timer-bar-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12rpx;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 4;
+}
+
+.timer-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow), var(--neon-pink));
+  transition: width 1s linear;
+}
+
+.timer-bar.urgent {
+  background: var(--neon-pink) !important;
+  animation: barPulse 0.5s ease-in-out infinite;
+}
+
+.timer-text {
+  position: absolute;
+  top: 28rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  opacity: 0.8;
+  z-index: 4;
+}
+
+.timer-text.urgent {
+  color: var(--neon-pink);
+  opacity: 1;
+  font-size: 44rpx;
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+.score-mini {
+  position: absolute;
+  top: 28rpx;
+  left: 36rpx;
+  z-index: 4;
+  font-size: 28rpx;
+  color: var(--muted);
+}
+
+.score-mini .green {
+  color: var(--neon-green);
+  font-weight: 700;
+}
+
+.btn-quit {
+  position: absolute;
+  top: 24rpx;
+  right: 28rpx;
+  z-index: 6;
+  padding: 14rpx 28rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--neon-pink);
+  background: rgba(255, 45, 149, 0.12);
+  border: 1px solid var(--neon-pink);
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 128rpx;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.flash.correct {
+  background: radial-gradient(circle, rgba(57, 255, 136, 0.85), rgba(57, 255, 136, 0.35));
+  color: #012;
+}
+
+.flash.skip {
+  background: radial-gradient(circle, rgba(255, 45, 149, 0.8), rgba(255, 45, 149, 0.3));
+  color: #fff;
+}
+
+.flash.show {
+  animation: flashPop 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-box {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12vh 32rpx;
+  box-sizing: border-box;
+}
+
+.word-main {
+  font-weight: 900;
+  line-height: 1.05;
+  color: #fff;
+  text-align: center;
+  word-break: break-all;
+  font-size: 18vmin;
+  text-shadow: 0 0 36rpx var(--neon-purple), 0 0 88rpx var(--neon-purple);
+}
+
+.word-main.pop {
+  animation: wordPop 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-hint {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom) + 192rpx);
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 28rpx;
+  z-index: 4;
+}
+
+.game-controls {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 28rpx;
+  padding: 0 40rpx;
+  z-index: 4;
+}
+
+.gc-btn {
+  flex: 1;
+  padding: 36rpx;
+  border-radius: 28rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.gc-skip {
+  background: rgba(255, 45, 149, 0.16);
+  color: var(--neon-pink);
+  border: 1px solid var(--neon-pink);
+}
+
+.gc-correct {
+  background: rgba(57, 255, 136, 0.16);
+  color: var(--neon-green);
+  border: 1px solid var(--neon-green);
+}
+
+.rotate-tip {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  text-align: center;
+  padding: 80rpx;
+}
+
+.rot-icon {
+  font-size: 120rpx;
+  margin-bottom: 40rpx;
+  animation: rot 2s ease-in-out infinite;
+}
+
+.rot-title {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.rot-sub {
+  color: var(--muted);
+  margin-top: 20rpx;
+}
+
+@keyframes flashPop {
+  0% { opacity: 0; transform: scale(0.4); }
+  15% { opacity: 1; transform: scale(1.08); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+
+@keyframes wordPop {
+  0% { opacity: 0; transform: scale(0.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.25); }
+}
+
+@keyframes barPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes rot {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(90deg); }
+}

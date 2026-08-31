@@ -1,0 +1,105 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 40rpx env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+.neon-title.small {
+  margin: 60rpx 0 0;
+  font-size: 52rpx;
+  letter-spacing: 4rpx;
+}
+
+.result-score {
+  font-size: 160rpx;
+  font-weight: 900;
+  text-align: center;
+  color: var(--neon-green);
+  text-shadow: 0 0 40rpx var(--neon-green);
+  margin-top: 20rpx;
+}
+
+.result-sub {
+  text-align: center;
+  color: var(--muted);
+  margin-bottom: 40rpx;
+}
+
+.review-scroll {
+  flex: 1;
+  max-height: 42vh;
+  margin-bottom: 24rpx;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 40rpx;
+}
+
+.review-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  background: var(--card);
+  margin-bottom: 16rpx;
+  border: 1px solid var(--card-brd);
+}
+
+.review-mark {
+  font-size: 30rpx;
+  font-weight: 800;
+  min-width: 40rpx;
+}
+
+.review-word {
+  font-size: 32rpx;
+}
+
+.review-correct .review-mark,
+.review-correct .review-word {
+  color: var(--neon-green);
+}
+
+.review-skip .review-mark,
+.review-skip .review-word {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.btn-ghost {
+  margin-bottom: 44rpx;
+}
+
+@media (orientation: landscape) {
+  .page {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 0 40rpx;
+  }
+
+  .neon-title.small,
+  .result-sub {
+    flex-basis: 100%;
+  }
+
+  .result-score {
+    flex: 1;
+    margin-top: 20rpx;
+  }
+
+  .review-scroll {
+    flex: 1 1 55%;
+    max-height: 42vh;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    flex-basis: 100%;
+  }
+}
