@@ -195,20 +195,10 @@ Page({
     gyro.vibrate(correct ? 'correct' : 'skip');
     this.updateScore();
 
-    if (!correct) {
-      this.idx += 1;
-      this.renderWord(false);
-      setTimeout(() => {
-        this.setData({ flashShow: false });
-        this.locked = false;
-      }, 950);
-      return;
-    }
-
+    this.idx += 1;
+    this.renderWord(false);
     setTimeout(() => {
       this.setData({ flashShow: false });
-      this.idx += 1;
-      this.renderWord(true);
       this.locked = false;
     }, 950);
   },
