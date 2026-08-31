@@ -18,6 +18,7 @@ function setPortrait() {
 Page({
   data: {
     phase: 'tap',
+    calibrating: false,
     word: '准备中…',
     wordHint: '',
     wordPop: false,
@@ -77,7 +78,7 @@ Page({
   },
 
   async onTapStart() {
-    if (this.data.phase !== 'tap') return;
+    if (this.data.phase !== 'tap' || this.data.calibrating) return;
     sfx.unlock();
     setLandscape();
 
@@ -85,7 +86,15 @@ Page({
     session.setNoGyro(!ok);
     if (!ok) {
       this.setData({ noGyro: true });
+      sfx.go();
+      this.startGame();
+      return;
     }
+
+    this.setData({ calibrating: true });
+    gyro.beginCalibration();
+    await gyro.waitCalibration();
+    this.setData({ calibrating: false });
 
     sfx.go();
     this.startGame();
@@ -102,7 +111,6 @@ Page({
       onAnswer: (correct) => this.answer(correct),
       isLocked: () => this.locked
     });
-    gyro.beginCalibration();
 
     if (!this.data.noGyro) {
       this.gyroCheckTimer = setTimeout(() => {

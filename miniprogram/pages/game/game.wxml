@@ -1,8 +1,8 @@
 <view class="page" bindtap="onTapStart">
-  <!-- 点击开始 -->
+  <!-- 点击开始 / 校准中 -->
   <view class="tap-start" wx:if="{{phase === 'tap'}}" catchtap="onTapStart">
-    <view class="tap-title">点击屏幕开始</view>
-    <view class="tap-sub">举到额头，屏幕朝队友</view>
+    <view class="tap-title">{{calibrating ? '保持姿势…' : '点击屏幕开始'}}</view>
+    <view class="tap-sub">{{calibrating ? '正在校准体感，请横举额头' : '举到额头，屏幕朝队友'}}</view>
   </view>
 
   <!-- 游戏阶段 -->
