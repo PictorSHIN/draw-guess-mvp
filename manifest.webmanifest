@@ -1,0 +1,20 @@
+{
+  "name": "你演我猜",
+  "short_name": "你演我猜",
+  "description": "线下朋友局的 Heads Up 式猜词派对游戏",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#0a0a12",
+  "theme_color": "#0a0a12",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

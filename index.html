@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>你演我猜 · Heads Up</title>
+<!-- PWA：从主屏图标打开时以独立全屏模式运行，无浏览器外壳 -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a12" />
+<meta name="mobile-web-app-capable" content="yes" />
+<!-- iOS 专用：添加到主屏后全屏、隐藏状态栏 -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="你演我猜" />
+<style>
+  :root {
+    --bg: #0a0a12;
+    --bg2: #12122a;
+    --neon-pink: #ff2d95;
+    --neon-cyan: #05d9e8;
+    --neon-purple: #a742ff;
+    --neon-green: #39ff88;
+    --neon-yellow: #ffe600;
+    --text: #eaeaff;
+    --muted: #8a8ab0;
+    --card: rgba(255,255,255,0.05);
+    --card-brd: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100vh; height: 100dvh;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at 20% 10%, #1a1040 0%, var(--bg) 55%),
+                radial-gradient(circle at 80% 90%, #061a2a 0%, transparent 60%);
+    overflow: hidden;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  #app { height: 100vh; height: 100dvh; width: 100%; position: relative; }
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+    animation: fade .3s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+
+  .neon-title {
+    font-size: 34px; font-weight: 900; letter-spacing: 6px; text-align: center;
+    margin: 9vh 0 5vh;
+    color: #fff;
+    text-shadow: 0 0 6px var(--neon-pink), 0 0 16px var(--neon-pink), 0 0 32px var(--neon-purple);
+  }
+  .home-tagline { display: none; }
+  /* 竖屏：两栏顺序堆叠；右栏占满剩余空间 */
+  #screen-home { flex-direction: column; }
+  .home-right { flex: 1; display: flex; flex-direction: column; min-height: 0; width: 100%; }
+
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  .section-label { color: var(--muted); font-size: 12px; margin: 20px 4px 10px; letter-spacing: 2px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .topic-card {
+    position: relative; border: 1px solid var(--card-brd); background: var(--card);
+    border-radius: 16px; padding: 22px 14px; cursor: pointer; overflow: hidden;
+    text-align: center;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .topic-card:active { transform: scale(.97); }
+  .topic-card.selected { border-color: var(--neon-cyan);
+    background: linear-gradient(160deg, rgba(5,217,232,.18), rgba(5,217,232,.04));
+    box-shadow: 0 0 18px rgba(5,217,232,.4) inset, 0 0 16px rgba(5,217,232,.35); }
+  .topic-card.selected .topic-name { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(5,217,232,.6); }
+  .topic-name { font-size: 17px; font-weight: 700; transition: color .15s; }
+  .topic-count { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    padding: 10px 18px; border-radius: 999px; border: 1px solid var(--card-brd);
+    background: var(--card); font-size: 15px; cursor: pointer; transition: all .15s;
+  }
+  .chip:active { transform: scale(.95); }
+  .chip.selected { color: #001; font-weight: 700; }
+  .chip.diff.selected { background: var(--neon-green); box-shadow: 0 0 14px var(--neon-green); border-color: var(--neon-green); }
+  .chip.time.selected { background: var(--neon-yellow); box-shadow: 0 0 14px var(--neon-yellow); border-color: var(--neon-yellow); }
+
+  .slider-wrap { margin-top: 16px; }
+  .slider-val { color: var(--neon-yellow); font-weight: 800; font-size: 15px; text-shadow: 0 0 8px var(--neon-yellow); }
+  input[type=range] { width: 100%; accent-color: var(--neon-yellow); height: 32px; }
+
+  .btn-primary {
+    margin: 16px 0 22px; padding: 18px; border: none; border-radius: 16px;
+    font-size: 20px; font-weight: 800; letter-spacing: 2px; cursor: pointer;
+    color: #001; background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple));
+    box-shadow: 0 0 22px rgba(255,45,149,.55);
+    transition: transform .12s;
+  }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-primary:not(:disabled) { animation: btnGlow 2s ease-in-out infinite; }
+  .btn-primary:disabled { opacity: .35; box-shadow: none; animation: none; }
+  @keyframes btnGlow {
+    0%,100% { box-shadow: 0 0 22px rgba(255,45,149,.5); }
+    50%     { box-shadow: 0 0 34px rgba(167,66,255,.7); }
+  }
+
+  .btn-ghost {
+    padding: 14px; border-radius: 14px; background: var(--card);
+    border: 1px solid var(--card-brd); color: var(--text); font-size: 16px; cursor: pointer;
+  }
+
+  /* ready / countdown */
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .ready-tip { color: var(--muted); font-size: 17px; line-height: 2; max-width: 320px; }
+  .count-num { font-size: 180px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 20px var(--neon-cyan), 0 0 50px var(--neon-cyan); }
+
+  /* game */
+  #screen-game { padding: 0; justify-content: center; align-items: center; }
+  .game-flash { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(64px, 16vmin, 160px); font-weight: 900; letter-spacing: 4px; }
+  .game-flash.correct { background: radial-gradient(circle, rgba(57,255,136,.85), rgba(57,255,136,.35)); color: #012; text-shadow: 0 0 30px #fff; }
+  .game-flash.skip { background: radial-gradient(circle, rgba(255,45,149,.8), rgba(255,45,149,.3)); color: #fff; text-shadow: 0 0 30px rgba(0,0,0,.4); }
+  .game-flash.show { animation: flashPop 1s cubic-bezier(.22,1,.36,1); }
+  @keyframes flashPop {
+    0%{opacity:0; transform:scale(.4);}
+    15%{opacity:1; transform:scale(1.08);}
+    30%{transform:scale(1);}
+    70%{opacity:1; transform:scale(1);}
+    100%{opacity:0; transform:scale(1.12);}
+  }
+
+  .timer-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: rgba(255,255,255,.08); z-index: 4; }
+  .timer-bar { height: 100%; width: 100%; background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow), var(--neon-pink)); transition: width 1s linear; }
+  .timer-text { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 700; color: var(--neon-cyan); z-index: 4; opacity: .8; }
+  .timer-text.urgent { color: var(--neon-pink); opacity: 1; font-size: 22px; animation: pulse .5s ease-in-out infinite; }
+  .timer-bar.urgent { background: var(--neon-pink) !important; animation: barPulse .5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.25);} }
+  @keyframes barPulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+  .score-mini { position: absolute; top: 14px; left: 18px; z-index: 4; font-size: 14px; color: var(--muted); opacity: .8; }
+  .score-mini b { color: var(--neon-green); }
+  .btn-quit { position: absolute; top: 12px; right: 14px; z-index: 6;
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer;
+    color: var(--neon-pink); background: rgba(255,45,149,.12); border: 1px solid var(--neon-pink);
+    opacity: .85; }
+  .btn-quit:active { transform: scale(.94); }
+
+  /* 题目充满屏幕：占满整屏、垂直水平居中、字号自适应 */
+  .word-box { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 8vh 16px; }
+  .word-main { font-weight: 900; line-height: 1.05; color: #fff;
+    text-shadow: 0 0 18px var(--neon-purple), 0 0 44px var(--neon-purple);
+    font-size: clamp(48px, 20vmin, 220px);
+    word-break: break-all; }
+  .word-main.pop { animation: wordPop .32s cubic-bezier(.22,1,.36,1); }
+  @keyframes wordPop { 0%{opacity:0; transform:scale(.7);} 100%{opacity:1; transform:scale(1);} }
+  .word-hint { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 96px); left: 0; right: 0;
+    text-align: center; color: var(--muted); font-size: 14px; opacity: .7; z-index: 4; }
+
+  .game-controls { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 0; right: 0;
+    display: flex; gap: 14px; padding: 0 20px; z-index: 4; }
+  .gc-btn { flex: 1; padding: 18px; border-radius: 14px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; opacity: .85; }
+  .gc-skip { background: rgba(255,45,149,.16); color: var(--neon-pink); border: 1px solid var(--neon-pink); }
+  .gc-correct { background: rgba(57,255,136,.16); color: var(--neon-green); border: 1px solid var(--neon-green); }
+
+  /* 陀螺仪可用时（默认）隐藏底部按钮和提示，纯靠上举/下举操作；
+     仅在无陀螺仪（桌面/授权被拒）时显示按钮兜底 */
+  #game-controls, .word-hint { display: none; }
+  body.no-gyro #game-controls { display: flex; }
+  body.no-gyro .word-hint { display: block; }
+
+  /* result */
+  .result-score { font-size: 80px; font-weight: 900; text-align: center; color: var(--neon-green);
+    text-shadow: 0 0 20px var(--neon-green); margin-top: 4vh; }
+  .result-sub { text-align: center; color: var(--muted); margin-bottom: 20px; }
+  .review-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px;
+    background: var(--card); margin-bottom: 8px; border: 1px solid var(--card-brd); }
+  .review-mark { font-size: 15px; font-weight: 800; min-width: 20px; }
+  .review-word { font-size: 16px; }
+  .review-correct .review-mark { color: var(--neon-green); }
+  .review-correct .review-word { color: var(--neon-green); }
+  .review-skip .review-mark { color: var(--muted); }
+  .review-skip .review-word { color: var(--muted); text-decoration: line-through; }
+
+  .perm-banner { background: rgba(167,66,255,.15); border: 1px solid var(--neon-purple); border-radius: 12px;
+    padding: 12px; font-size: 13px; color: var(--text); margin: 10px 4px; text-align: center; }
+
+  /* ===== 横屏适配（举额头玩时手机是横的）===== */
+  @media (orientation: landscape) {
+    /* 首页横屏：左右分栏——左侧标题，右侧设置 */
+    #screen-home { flex-direction: row; padding: 0; align-items: stretch; }
+    .home-left { flex: 0 0 38%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      background: rgba(255,255,255,.03); border-right: 1px solid var(--card-brd);
+      padding: 20px; }
+    .home-left .neon-title { margin: 0; font-size: clamp(30px, 6vw, 56px); }
+    .home-tagline { display: block; color: var(--neon-cyan); font-size: 14px;
+      letter-spacing: 4px; margin-top: 16px; text-shadow: 0 0 8px var(--neon-cyan); }
+    .home-right { padding: 3vh 24px; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .topic-card { padding: 14px 10px; }
+
+    /* 结算/准备等居中页压缩间距 */
+    .neon-title { margin: 3vh 0 2vh; font-size: 26px; }
+    .center { padding: 2vh 0; }
+    .ready-tip { font-size: 15px; line-height: 1.7; max-width: 90%; }
+    .count-num { font-size: 30vh; }
+    .btn-primary { margin: 10px 0 12px; padding: 14px; font-size: 18px; }
+
+    /* 游戏页横屏：题字更大，按钮左右并排 */
+    .word-main { font-size: clamp(60px, 26vmin, 300px); }
+    .word-hint { bottom: 10px; }
+    .game-controls { flex-direction: row; }
+
+    /* 结算页横屏：得分区与回顾列表左右分栏 */
+    #screen-result { flex-direction: row; flex-wrap: wrap; align-items: flex-start; padding: 0 20px; }
+    #screen-result .neon-title { flex-basis: 100%; }
+    #screen-result .result-score { flex: 1; margin-top: 2vh; }
+    #screen-result .result-sub { flex-basis: 100%; margin: 4px 0 10px; }
+    #screen-result #review-list { flex: 1 1 55%; max-height: 42vh; }
+    #screen-result .btn-primary, #screen-result .btn-ghost { flex-basis: 100%; }
+  }
+
+  /* 竖屏时在游戏相关页提示旋转（举额头需横屏） */
+  #rotate-tip { display: none; }
+  @media (orientation: portrait) {
+    body.in-game #rotate-tip {
+      display: flex; position: fixed; inset: 0; z-index: 50;
+      flex-direction: column; align-items: center; justify-content: center; text-align: center;
+      background: var(--bg); color: var(--text); padding: 40px;
+    }
+    body.in-game #rotate-tip .rot-icon { font-size: 60px; margin-bottom: 20px; animation: rot 2s ease-in-out infinite; }
+    @keyframes rot { 0%,100%{transform:rotate(0);} 50%{transform:rotate(90deg);} }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 竖屏提示横过来玩（仅游戏相关页显示） -->
+  <div id="rotate-tip">
+    <div class="rot-icon">⟳</div>
+    <div style="font-size:20px;font-weight:700;">请把手机横过来</div>
+    <div style="color:var(--muted);margin-top:10px;">横屏举到额头，屏幕面向队友</div>
+  </div>
+
+  <!-- ========== HOME ========== -->
+  <section id="screen-home" class="screen active">
+    <div class="home-left">
+      <div class="neon-title">你演我猜</div>
+      <div class="home-tagline">举额头 · 猜猜看</div>
+    </div>
+    <div class="home-right">
+      <div class="scroll">
+        <div class="section-label">选择主题</div>
+        <div id="topic-grid" class="grid"></div>
+
+        <div class="section-label">难度</div>
+        <div id="diff-row" class="chip-row"></div>
+
+        <div class="section-label">倒计时</div>
+        <div id="time-row" class="chip-row"></div>
+        <div class="slider-wrap">
+          <div>自定义：<span id="time-val" class="slider-val">90 秒</span></div>
+          <input id="time-slider" type="range" min="30" max="180" step="5" value="90" />
+        </div>
+      </div>
+      <button id="btn-start" class="btn-primary">开 始 游 戏</button>
+    </div>
+  </section>
+
+  <!-- ========== READY ========== -->
+  <section id="screen-ready" class="screen">
+    <div class="center">
+      <div id="ready-topic" style="font-size:26px;font-weight:800;margin-bottom:28px;"></div>
+      <div class="ready-tip">
+        举到额头，屏幕朝队友<br/>
+        <b style="color:var(--neon-green)">下翻答对</b> · <b style="color:var(--neon-pink)">上翻跳过</b>
+      </div>
+      <div id="perm-banner" class="perm-banner" style="display:none;">
+        本设备需授权动作传感器 · 点击下方按钮开启
+      </div>
+    </div>
+    <button id="btn-ready" class="btn-primary">准 备 好 了</button>
+    <button id="btn-back-home" class="btn-ghost" style="margin-bottom:22px;">返回</button>
+  </section>
+
+  <!-- ========== COUNTDOWN ========== -->
+  <section id="screen-count" class="screen">
+    <div class="center">
+      <div id="count-num" class="count-num">3</div>
+    </div>
+  </section>
+
+  <!-- ========== GAME ========== -->
+  <section id="screen-game" class="screen">
+    <div class="timer-bar-wrap"><div id="timer-bar" class="timer-bar"></div></div>
+    <div id="timer-text" class="timer-text">90</div>
+    <div id="score-mini" class="score-mini">对 <b>0</b> · 过 0</div>
+    <button id="btn-quit" class="btn-quit" aria-label="退出答题">✕ 退出</button>
+    <div id="flash" class="game-flash"></div>
+    <div class="word-box">
+      <div id="word-main" class="word-main">准备中…</div>
+    </div>
+    <div class="word-hint" id="word-hint"></div>
+    <div class="game-controls" id="game-controls">
+      <button id="gc-skip" class="gc-btn gc-skip">跳过</button>
+      <button id="gc-correct" class="gc-btn gc-correct">答对</button>
+    </div>
+  </section>
+
+  <!-- ========== RESULT ========== -->
+  <section id="screen-result" class="screen">
+    <div class="neon-title" style="margin:5vh 0 0;font-size:26px;letter-spacing:2px;">本轮结束</div>
+    <div class="result-score" id="result-score">0</div>
+    <div class="result-sub" id="result-sub">答对 0 · 跳过 0</div>
+    <div class="scroll" id="review-list"></div>
+    <button id="btn-again" class="btn-primary">再 来 一 局</button>
+    <button id="btn-home" class="btn-ghost" style="margin-bottom:22px;">回首页</button>
+  </section>
+
+</div>
+
+<script src="data/words.js"></script>
+<script>
+/* =========================================================
+   题库层：数据来自 data/words.js（window.WORD_BANK）
+   - 每主题 200 词，按“易→难”大致排序
+   - 运行时按三等分切成 简单/中等/困难 三档
+   - 未来接 AI 生成：替换 getWords 为 async 实现即可，上层不变
+   ========================================================= */
+const DIFFS = [
+  { id: "easy", label: "简单" },
+  { id: "mid",  label: "中等" },
+  { id: "hard", label: "困难" }
+];
+const TIME_PRESETS = [60, 90, 120];
+
+// 由 WORD_BANK 构建 TOPICS：把扁平 list 三等分成难度档
+const TOPICS = (() => {
+  const bank = window.WORD_BANK || {};
+  const out = {};
+  for (const [id, t] of Object.entries(bank)) {
+    const n = t.list.length;
+    const a = Math.floor(n / 3);
+    out[id] = {
+      name: t.name,
+      words: {
+        easy: t.list.slice(0, a),
+        mid:  t.list.slice(a, a * 2),
+        hard: t.list.slice(a * 2),
+      }
+    };
+  }
+  return out;
+})();
+
+/* provider: 返回洗好的词列表（未来可换成 async 调 AI） */
+function getWords(topicId, diffId) {
+  const arr = [...TOPICS[topicId].words[diffId]];
+  // Fisher-Yates 洗牌
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* ================= 状态 ================= */
+const state = {
+  topic: null,
+  diff: "easy",
+  time: 90,
+  deck: [],
+  idx: 0,
+  results: [],   // {word, correct:bool}
+  timeLeft: 0,
+  timerId: null,
+  locked: false, // 翻牌防抖
+};
+
+/* ================= 工具 ================= */
+const $ = (id) => document.getElementById(id);
+function show(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(screenId).classList.add("active");
+  // 仅在倒数/游戏页要求横屏，显示竖屏旋转提示
+  const inGame = (screenId === "screen-count" || screenId === "screen-game");
+  document.body.classList.toggle("in-game", inGame);
+}
+
+/* ================= 首页渲染 ================= */
+function renderHome() {
+  const grid = $("topic-grid");
+  grid.innerHTML = "";
+  Object.entries(TOPICS).forEach(([id, t]) => {
+    const total = Object.values(t.words).reduce((s, a) => s + a.length, 0);
+    const el = document.createElement("div");
+    el.className = "topic-card" + (state.topic === id ? " selected" : "");
+    el.innerHTML = `<div class="topic-name">${t.name}</div>
+      <div class="topic-count">${total} 题</div>`;
+    el.onclick = () => { state.topic = id; renderHome(); updateStartBtn(); };
+    grid.appendChild(el);
+  });
+
+  const diffRow = $("diff-row");
+  diffRow.innerHTML = "";
+  DIFFS.forEach(d => {
+    const c = document.createElement("div");
+    c.className = "chip diff" + (state.diff === d.id ? " selected" : "");
+    c.textContent = d.label;
+    c.onclick = () => { state.diff = d.id; renderHome(); };
+    diffRow.appendChild(c);
+  });
+
+  const timeRow = $("time-row");
+  timeRow.innerHTML = "";
+  TIME_PRESETS.forEach(t => {
+    const c = document.createElement("div");
+    c.className = "chip time" + (state.time === t ? " selected" : "");
+    c.textContent = t + "s";
+    c.onclick = () => { state.time = t; $("time-slider").value = t; $("time-val").textContent = t + " 秒"; renderHome(); };
+    timeRow.appendChild(c);
+  });
+}
+function updateStartBtn() { $("btn-start").disabled = !state.topic; }
+
+$("time-slider").addEventListener("input", (e) => {
+  state.time = +e.target.value;
+  $("time-val").textContent = state.time + " 秒";
+  renderHome();
+});
+
+/* ================= 流程控制 ================= */
+$("btn-start").onclick = () => {
+  if (!state.topic) return;
+  $("ready-topic").textContent = TOPICS[state.topic].name;
+  // iOS 13+ 需要用户手势里申请传感器权限
+  const needPerm = typeof DeviceMotionEvent !== "undefined" &&
+                   typeof DeviceMotionEvent.requestPermission === "function";
+  $("perm-banner").style.display = needPerm ? "block" : "none";
+  show("screen-ready");
+};
+
+$("btn-back-home").onclick = () => show("screen-home");
+$("btn-ready").onclick = async () => {
+  sfx.unlock();         // 用户手势里解锁音频（iOS 要求）
+  requestFs();          // 用户手势内请求全屏（Android 生效；iOS 靠“添加到主屏”）
+  await enableGyro();
+  startCountdown();
+};
+
+/* 全屏 API：Android Chrome 可隐藏地址栏；iOS iPhone 不支持，忽略即可 */
+function requestFs() {
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (fn) { try { fn.call(el); } catch (e) {} }
+}
+
+function startCountdown() {
+  show("screen-count");
+  let n = 3;
+  $("count-num").textContent = n;
+  const tick = setInterval(() => {
+    n--;
+    if (n <= 0) { clearInterval(tick); startGame(); }
+    else { $("count-num").textContent = n; }
+  }, 900);
+}
+
+function startGame() {
+  state.deck = getWords(state.topic, state.diff);
+  state.idx = 0;
+  state.results = [];
+  state.timeLeft = state.time;
+  state.locked = false;
+  // 每局重置陀螺仪判定状态，避免上一局残留导致误触
+  GY.armed = true;
+  GY.lastFire = 0;
+  $("timer-bar").style.width = "100%";
+  show("screen-game");
+  renderWord();
+  updateScoreMini();
+  startTimer();
+}
+
+function renderWord() {
+  if (state.idx >= state.deck.length) {
+    // 题目用完，提前结束
+    endGame();
+    return;
+  }
+  const el = $("word-main");
+  el.textContent = state.deck[state.idx];
+  $("word-hint").textContent = `第 ${state.idx + 1} / ${state.deck.length} 题`;
+  // 重新触发入场动画
+  el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+}
+
+function startTimer() {
+  $("timer-text").textContent = state.timeLeft;
+  $("timer-text").classList.remove("urgent");
+  $("timer-bar").classList.remove("urgent");
+  state.timerId = setInterval(() => {
+    state.timeLeft--;
+    $("timer-text").textContent = state.timeLeft;
+    $("timer-bar").style.width = (state.timeLeft / state.time * 100) + "%";
+    // 最后 10 秒冲刺提醒
+    if (state.timeLeft === 10) {
+      $("timer-text").classList.add("urgent");
+      $("timer-bar").classList.add("urgent");
+    }
+    if (state.timeLeft <= 10 && state.timeLeft > 0) { sfx.tick(); vibrate([20]); }
+    if (state.timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+function flash(type, text) {
+  const f = $("flash");
+  f.className = "game-flash " + type + " show";
+  f.textContent = text;
+  setTimeout(() => { f.className = "game-flash"; }, 1000);
+}
+
+function answer(correct) {
+  if (state.locked || !$("screen-game").classList.contains("active")) return;
+  state.locked = true;
+  state.results.push({ word: state.deck[state.idx], correct });
+  flash(correct ? "correct" : "skip", correct ? "答对" : "跳过");
+  correct ? sfx.correct() : sfx.skip();
+  updateScoreMini();
+  vibrate(correct ? [40] : [20, 40]);
+  setTimeout(() => {
+    state.idx++;
+    renderWord();
+    state.locked = false;
+  }, 950);
+}
+
+function updateScoreMini() {
+  const c = state.results.filter(r => r.correct).length;
+  const s = state.results.filter(r => !r.correct).length;
+  $("score-mini").innerHTML = `对 <b>${c}</b> · 过 ${s}`;
+}
+
+$("gc-correct").onclick = () => answer(true);
+$("gc-skip").onclick = () => answer(false);
+
+function endGame() {
+  clearInterval(state.timerId);
+  disableGyro();
+  $("timer-text").classList.remove("urgent");
+  $("timer-bar").classList.remove("urgent");
+  sfx.end();
+  const correct = state.results.filter(r => r.correct).length;
+  const skip = state.results.filter(r => !r.correct).length;
+  $("result-score").textContent = correct;
+  $("result-sub").textContent = `答对 ${correct} · 跳过 ${skip}`;
+  const list = $("review-list");
+  list.innerHTML = "";
+  if (state.results.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:var(--muted);margin-top:20px;">这轮还没来得及答题～</div>`;
+  }
+  state.results.forEach(r => {
+    const item = document.createElement("div");
+    item.className = "review-item " + (r.correct ? "review-correct" : "review-skip");
+    item.innerHTML = `<span class="review-mark">${r.correct ? "对" : "过"}</span>
+      <span class="review-word">${r.word}</span>`;
+    list.appendChild(item);
+  });
+  show("screen-result");
+}
+
+$("btn-again").onclick = () => { show("screen-ready"); };
+$("btn-home").onclick = () => { show("screen-home"); };
+
+/* 退出答题：中止本局，走结算页展示已答对/跳过统计 */
+function quitGame() {
+  endGame();
+}
+$("btn-quit").onclick = quitGame;
+
+/* ================= 体感翻牌（重力加速度）=================
+   之前用 deviceorientation 的 beta/gamma 欧拉角，横屏举额头时手机近乎竖直，
+   会落入欧拉角万向锁死区，导致上翻/下翻方向判反或同号（都判答对）。
+   改用 devicemotion 的 accelerationIncludingGravity：
+   手机竖直时屏幕法线方向重力分量 z≈0；向前/向后翻转时 z 会干净地正负翻转，
+   不受握持朝向影响，方向判定稳定。 */
+let gyroActive = false;
+const GY = {
+  armed: true,        // 是否处于可触发状态（已解锁且已回中）
+  gotData: false,     // 是否收到过有效传感器数据
+  TRIG: 5.5,          // 触发阈值（m/s²，重力约 9.8）
+  REARM: 3.0,         // 回中阈值 —— |z| 小于此值才重新武装
+  lastFire: 0,        // 上次触发时间戳
+  COOLDOWN: 1100,     // 两次触发的最小间隔（ms），需 ≥ 切题动画时长
+};
+
+async function enableGyro() {
+  try {
+    if (typeof DeviceMotionEvent === "undefined") {
+      document.body.classList.add("no-gyro"); gyroActive = false; return; // 不支持：按钮兜底
+    }
+    if (typeof DeviceMotionEvent.requestPermission === "function") {
+      const res = await DeviceMotionEvent.requestPermission();
+      if (res !== "granted") { document.body.classList.add("no-gyro"); return; } // 被拒：按钮兜底
+    }
+    GY.armed = true;
+    GY.gotData = false;
+    GY.lastFire = 0;
+    document.body.classList.remove("no-gyro"); // 传感器可用：隐藏按钮
+    window.addEventListener("devicemotion", onMotion);
+    gyroActive = true;
+    // 兜底：3 秒内没收到任何传感器数据，判定不可用，显示按钮
+    setTimeout(() => { if (!GY.gotData) document.body.classList.add("no-gyro"); }, 3000);
+  } catch (e) { document.body.classList.add("no-gyro"); }
+}
+function disableGyro() {
+  window.removeEventListener("devicemotion", onMotion);
+  gyroActive = false;
+}
+
+function onMotion(e) {
+  if (!$("screen-game").classList.contains("active")) return;
+  const g = e.accelerationIncludingGravity;
+  if (!g || g.z == null) return;
+  GY.gotData = true;
+
+  // z = 屏幕法线方向重力分量。竖直举起时≈0；向前翻转与向后翻转 z 符号相反。
+  const z = g.z;
+
+  // 未武装：必须“已解锁 + 已回到中位（近竖直）”才重新武装
+  if (!GY.armed) {
+    if (!state.locked && Math.abs(z) < GY.REARM) GY.armed = true;
+    return;
+  }
+  if (state.locked) return;
+  if (Date.now() - GY.lastFire < GY.COOLDOWN) return;
+
+  if (z > GY.TRIG) {          // 向下翻（屏幕朝下）→ 答对
+    GY.armed = false;
+    GY.lastFire = Date.now();
+    answer(true);
+  } else if (z < -GY.TRIG) {  // 向上翻（屏幕朝上）→ 跳过
+    GY.armed = false;
+    GY.lastFire = Date.now();
+    answer(false);
+  }
+}
+
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+/* ================= 音效（WebAudio 合成，无需外部资源）================= */
+const sfx = (() => {
+  let ctx = null;
+  function ac() {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    return ctx;
+  }
+  // 用户手势里解锁音频上下文（iOS 要求）
+  function unlock() { const c = ac(); if (c && c.state === "suspended") c.resume(); }
+  // 播放一个音符
+  function tone(freq, dur, type = "sine", vol = 0.25, delay = 0) {
+    const c = ac(); if (!c) return;
+    const t0 = c.currentTime + delay;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g).connect(c.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+  return {
+    unlock,
+    correct() { tone(880, 0.12, "triangle", 0.3); tone(1320, 0.16, "triangle", 0.28, 0.08); }, // 上行“叮咚”
+    skip()    { tone(300, 0.16, "sawtooth", 0.22); tone(200, 0.18, "sawtooth", 0.2, 0.06); },   // 下行“噗”
+    tick()    { tone(1000, 0.05, "square", 0.15); },                                            // 秒针
+    end()     { [523,659,784,1047].forEach((f,i)=>tone(f,0.22,"triangle",0.28,i*0.12)); },      // 结束和弦
+  };
+})();
+
+/* ================= init ================= */
+renderHome();
+updateStartBtn();
+</script>
+</body>
+</html>
