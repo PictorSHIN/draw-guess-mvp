@@ -1,13 +1,15 @@
 const GY = {
   armed: true,
   gotData: false,
-  BETA_TRIG: 22,
-  ACCEL_TRIG: 2.8,
-  REARM_BETA: 10,
-  REARM_ACCEL: 2.0,
+  BETA_TRIG: 20,
+  ACCEL_TRIG: 2.5,
+  REARM_BETA: 12,
+  REARM_ACCEL: 2.2,
   lastFire: 0,
   COOLDOWN: 1100,
-  CAL_MS: 1200
+  CAL_MS: 1200,
+  // 微信小程序坐标系与 H5 相反，统一取反：处理后 delta>0 为下翻答对
+  INVERT: -1
 };
 
 let sensorOn = false;
@@ -17,6 +19,8 @@ let isLocked = () => false;
 
 let neutral = { x: 0, y: 0, z: 0, beta: 0, gamma: 0 };
 let flipAxis = 'z';
+let primaryAngle = 'beta';
+let lastHitKind = 'accel';
 let calibrating = false;
 let calTimer = null;
 let calSamples = [];
@@ -27,6 +31,7 @@ let lastAccel = { x: 0, y: 0, z: 0 };
 function resetGyroState() {
   GY.armed = true;
   GY.lastFire = 0;
+  lastHitKind = 'accel';
 }
 
 function angleDiff(a, b) {
@@ -34,6 +39,10 @@ function angleDiff(a, b) {
   if (d > 180) d -= 360;
   if (d < -180) d += 360;
   return d;
+}
+
+function normDelta(raw) {
+  return raw * GY.INVERT;
 }
 
 function beginCalibration() {
@@ -62,6 +71,7 @@ function finishCalibration() {
     z: Math.abs(neutral.z)
   };
   flipAxis = Object.keys(abs).sort((a, b) => abs[a] - abs[b])[0];
+  primaryAngle = Math.abs(neutral.beta) >= Math.abs(neutral.gamma) ? 'beta' : 'gamma';
 }
 
 function pushCalSample() {
@@ -74,43 +84,56 @@ function pushCalSample() {
   });
 }
 
-function readFlipOffset() {
-  const betaOff = Math.abs(angleDiff(lastMotion.beta, neutral.beta));
-  const gammaOff = Math.abs(angleDiff(lastMotion.gamma, neutral.gamma));
-  const accelOff = Math.abs(lastAccel[flipAxis] - neutral[flipAxis]);
-  return Math.min(betaOff, gammaOff, accelOff);
+function accelDelta() {
+  return normDelta(lastAccel[flipAxis] - neutral[flipAxis]);
+}
+
+function angleDelta() {
+  return normDelta(angleDiff(lastMotion[primaryAngle], neutral[primaryAngle]));
+}
+
+function accelOffset() {
+  return Math.abs(lastAccel[flipAxis] - neutral[flipAxis]);
+}
+
+function angleOffset() {
+  return Math.abs(angleDiff(lastMotion[primaryAngle], neutral[primaryAngle]));
+}
+
+function isNearNeutral() {
+  if (lastHitKind === 'angle') {
+    return angleOffset() < GY.REARM_BETA;
+  }
+  return accelOffset() < GY.REARM_ACCEL;
 }
 
 function pickFlipCandidate() {
-  const candidates = [
-    { delta: angleDiff(lastMotion.beta, neutral.beta), trig: GY.BETA_TRIG },
-    { delta: angleDiff(lastMotion.gamma, neutral.gamma), trig: GY.BETA_TRIG },
-    { delta: lastAccel[flipAxis] - neutral[flipAxis], trig: GY.ACCEL_TRIG },
-    { delta: lastAccel.x - neutral.x, trig: GY.ACCEL_TRIG },
-    { delta: lastAccel.y - neutral.y, trig: GY.ACCEL_TRIG },
-    { delta: lastAccel.z - neutral.z, trig: GY.ACCEL_TRIG }
-  ];
+  const accel = {
+    kind: 'accel',
+    delta: accelDelta(),
+    trig: GY.ACCEL_TRIG
+  };
+  const angle = {
+    kind: 'angle',
+    delta: angleDelta(),
+    trig: GY.BETA_TRIG
+  };
 
-  let best = null;
-  for (const c of candidates) {
-    if (Math.abs(c.delta) >= c.trig && (!best || Math.abs(c.delta) > Math.abs(best.delta))) {
-      best = c;
-    }
-  }
-  return best;
+  const hitAccel = Math.abs(accel.delta) >= accel.trig ? accel : null;
+  const hitAngle = Math.abs(angle.delta) >= angle.trig ? angle : null;
+
+  if (!hitAccel && !hitAngle) return null;
+  if (!hitAccel) return hitAngle;
+  if (!hitAngle) return hitAccel;
+  return Math.abs(hitAccel.delta) >= Math.abs(hitAngle.delta) ? hitAccel : hitAngle;
 }
 
 function tryFlip() {
   if (calibrating) return;
   if (!gameBound || !onAnswer) return;
 
-  const betaOff = Math.abs(angleDiff(lastMotion.beta, neutral.beta));
-  const gammaOff = Math.abs(angleDiff(lastMotion.gamma, neutral.gamma));
-  const accelOff = Math.abs(lastAccel[flipAxis] - neutral[flipAxis]);
-  const nearNeutral = betaOff < GY.REARM_BETA && gammaOff < GY.REARM_BETA && accelOff < GY.REARM_ACCEL;
-
   if (!GY.armed) {
-    if (!isLocked() && nearNeutral) GY.armed = true;
+    if (!isLocked() && isNearNeutral()) GY.armed = true;
     return;
   }
   if (isLocked()) return;
@@ -121,7 +144,8 @@ function tryFlip() {
 
   GY.armed = false;
   GY.lastFire = Date.now();
-  // 下翻（屏幕朝地）→ 答对；上翻（屏幕朝天）→ 跳过
+  lastHitKind = hit.kind;
+  // delta>0 → 下翻答对；delta<0 → 上翻跳过
   onAnswer(hit.delta > 0);
 }
 
