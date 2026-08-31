@@ -1,4 +1,5 @@
 {
   "navigationStyle": "custom",
+  "pageOrientation": "landscape",
   "disableScroll": true
 }

@@ -3,6 +3,18 @@ const session = require('../../utils/session.js');
 const gyro = require('../../utils/gyro.js');
 const sfx = require('../../utils/sfx.js');
 
+function setLandscape() {
+  if (typeof wx.setPageOrientation === 'function') {
+    wx.setPageOrientation({ orientation: 'landscape' });
+  }
+}
+
+function setPortrait() {
+  if (typeof wx.setPageOrientation === 'function') {
+    wx.setPageOrientation({ orientation: 'portrait' });
+  }
+}
+
 Page({
   data: {
     phase: 'tap',
@@ -29,9 +41,10 @@ Page({
   gyroCheckTimer: null,
 
   onLoad() {
+    setLandscape();
     const settings = session.getSettings();
     this.setData({
-      noGyro: session.getNoGyro(),
+      noGyro: false,
       totalTime: settings.time,
       timeLeft: settings.time,
       timerPct: 100,
@@ -41,11 +54,12 @@ Page({
   },
 
   onShow() {
-    gyro.bindGame({
-      onAnswer: (correct) => this.answer(correct),
-      isLocked: () => this.locked
-    });
+    setLandscape();
     if (this.data.phase === 'playing') {
+      gyro.bindGame({
+        onAnswer: (correct) => this.answer(correct),
+        isLocked: () => this.locked
+      });
       this.startTimerTick();
     }
   },
@@ -59,11 +73,20 @@ Page({
     gyro.unbindGame();
     gyro.stopSensor();
     this.clearTimers();
+    setPortrait();
   },
 
-  onTapStart() {
+  async onTapStart() {
     if (this.data.phase !== 'tap') return;
     sfx.unlock();
+    setLandscape();
+
+    const ok = await gyro.startSensor();
+    session.setNoGyro(!ok);
+    if (!ok) {
+      this.setData({ noGyro: true });
+    }
+
     sfx.go();
     this.startGame();
   },
@@ -74,7 +97,12 @@ Page({
     this.idx = 0;
     this.results = [];
     this.locked = false;
-    gyro.resetGyroState();
+
+    gyro.bindGame({
+      onAnswer: (correct) => this.answer(correct),
+      isLocked: () => this.locked
+    });
+    gyro.beginCalibration();
 
     if (!this.data.noGyro) {
       this.gyroCheckTimer = setTimeout(() => {

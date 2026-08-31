@@ -1,6 +1,5 @@
 const { TOPICS } = require('../../utils/words.js');
 const session = require('../../utils/session.js');
-const gyro = require('../../utils/gyro.js');
 const sfx = require('../../utils/sfx.js');
 
 Page({
@@ -17,15 +16,8 @@ Page({
     wx.navigateBack();
   },
 
-  async onReady() {
+  onReady() {
     sfx.unlock();
-    const ok = await gyro.startSensor();
-    session.setNoGyro(!ok);
-    if (ok) {
-      setTimeout(() => {
-        if (!gyro.hasData()) session.setNoGyro(true);
-      }, 3000);
-    }
     wx.navigateTo({ url: '/pages/game/game' });
   }
 });
