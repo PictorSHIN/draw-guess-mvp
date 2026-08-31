@@ -2,12 +2,10 @@ const { getWords } = require('../../utils/words.js');
 const session = require('../../utils/session.js');
 const gyro = require('../../utils/gyro.js');
 const sfx = require('../../utils/sfx.js');
-const orientation = require('../../utils/orientation.js');
 
 Page({
   data: {
-    phase: 'countdown',
-    countNum: 3,
+    phase: 'tap',
     word: '准备中…',
     wordHint: '',
     wordPop: false,
@@ -20,8 +18,7 @@ Page({
     flashType: '',
     flashText: '',
     flashShow: false,
-    noGyro: false,
-    showRotate: false
+    noGyro: false
   },
 
   locked: false,
@@ -29,7 +26,6 @@ Page({
   idx: 0,
   results: [],
   timerId: null,
-  countTimer: null,
   gyroCheckTimer: null,
 
   onLoad() {
@@ -38,15 +34,13 @@ Page({
       noGyro: session.getNoGyro(),
       totalTime: settings.time,
       timeLeft: settings.time,
-      timerPct: 100
+      timerPct: 100,
+      phase: 'tap'
     });
     sfx.unlock();
   },
 
   onShow() {
-    orientation.start((landscape) => {
-      this.setData({ showRotate: !landscape });
-    });
     gyro.bindGame({
       onAnswer: (correct) => this.answer(correct),
       isLocked: () => this.locked
@@ -57,40 +51,21 @@ Page({
   },
 
   onHide() {
-    orientation.stop();
     gyro.unbindGame();
     this.clearTimers();
   },
 
   onUnload() {
-    orientation.stop();
     gyro.unbindGame();
     gyro.stopSensor();
     this.clearTimers();
   },
 
-  onReady() {
-    this.startCountdown();
-  },
-
-  startCountdown() {
+  onTapStart() {
+    if (this.data.phase !== 'tap') return;
     sfx.unlock();
-    let n = 3;
-    this.setData({ phase: 'countdown', countNum: n });
-    sfx.countdown(n);
-
-    this.countTimer = setInterval(() => {
-      n -= 1;
-      if (n <= 0) {
-        clearInterval(this.countTimer);
-        this.countTimer = null;
-        sfx.go();
-        this.startGame();
-      } else {
-        this.setData({ countNum: n });
-        sfx.countdown(n);
-      }
-    }, 900);
+    sfx.go();
+    this.startGame();
   },
 
   startGame() {
@@ -114,14 +89,13 @@ Page({
       timerPct: 100,
       urgent: false
     });
-    orientation.emit();
     this.renderWord();
     this.updateScore();
     this.startTimerTick();
   },
 
   startTimerTick() {
-    this.clearTimerOnly();
+    this.clearTimers();
     this.timerId = setInterval(() => {
       let timeLeft = this.data.timeLeft - 1;
       if (timeLeft <= 0) {
@@ -202,16 +176,10 @@ Page({
     wx.redirectTo({ url: '/pages/result/result' });
   },
 
-  clearTimerOnly() {
-    if (this.timerId) clearInterval(this.timerId);
-    this.timerId = null;
-  },
-
   clearTimers() {
-    this.clearTimerOnly();
-    if (this.countTimer) clearInterval(this.countTimer);
+    if (this.timerId) clearInterval(this.timerId);
     if (this.gyroCheckTimer) clearTimeout(this.gyroCheckTimer);
-    this.countTimer = null;
+    this.timerId = null;
     this.gyroCheckTimer = null;
   }
 });

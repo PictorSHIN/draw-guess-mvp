@@ -1,14 +1,8 @@
-<view class="page">
-  <!-- 竖屏旋转提示（倒数 + 答题阶段） -->
-  <view class="rotate-tip" wx:if="{{showRotate && (phase === 'playing' || phase === 'countdown')}}">
-    <view class="rot-icon">⟳</view>
-    <view class="rot-title">请把手机横过来</view>
-    <view class="rot-sub">横屏举到额头，屏幕面向队友</view>
-  </view>
-
-  <!-- 倒数阶段 -->
-  <view class="countdown" wx:if="{{phase === 'countdown'}}">
-    <text class="count-num">{{countNum}}</text>
+<view class="page" bindtap="onTapStart">
+  <!-- 点击开始 -->
+  <view class="tap-start" wx:if="{{phase === 'tap'}}" catchtap="onTapStart">
+    <view class="tap-title">点击屏幕开始</view>
+    <view class="tap-sub">举到额头，屏幕朝队友</view>
   </view>
 
   <!-- 游戏阶段 -->
@@ -18,7 +12,7 @@
     </view>
     <view class="timer-text {{urgent ? 'urgent' : ''}}">{{timeLeft}}</view>
     <view class="score-mini">对 <text class="green">{{scoreCorrect}}</text> · 过 {{scoreSkip}}</view>
-    <view class="btn-quit" bindtap="onQuit">✕ 退出</view>
+    <view class="btn-quit" catchtap="onQuit">✕ 退出</view>
 
     <view class="flash {{flashType}} {{flashShow ? 'show' : ''}}" wx:if="{{flashShow}}">{{flashText}}</view>
 
@@ -28,8 +22,8 @@
     <view class="word-hint" wx:if="{{noGyro}}">{{wordHint}}</view>
 
     <view class="game-controls" wx:if="{{noGyro}}">
-      <view class="gc-btn gc-skip" bindtap="onSkip">跳过</view>
-      <view class="gc-btn gc-correct" bindtap="onCorrect">答对</view>
+      <view class="gc-btn gc-skip" catchtap="onSkip">跳过</view>
+      <view class="gc-btn gc-correct" catchtap="onCorrect">答对</view>
     </view>
   </block>
 </view>
